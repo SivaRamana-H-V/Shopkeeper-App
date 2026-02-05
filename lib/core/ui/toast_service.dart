@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shopkeeper_app/providers/toast_provider.dart';
+import '../global_keys.dart';
 
 class ToastService {
-  static void show(BuildContext context, ToastMessage toast) {
+  static void show(ToastMessage toast) {
     Color bgColor;
 
     switch (toast.type) {
@@ -17,8 +18,13 @@ class ToastService {
         break;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(toast.message), backgroundColor: bgColor),
+    rootScaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(toast.message),
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }

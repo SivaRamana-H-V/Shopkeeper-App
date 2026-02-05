@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:go_router/go_router.dart';
 import '../../controllers/auth_controller.dart';
 import '../../providers/toast_provider.dart';
+import '../../core/constants/app_strings.dart';
+import '../../core/router/app_routes.dart';
+import '../../core/ui/gradient_button.dart';
 
 class RegisterView extends ConsumerStatefulWidget {
   const RegisterView({super.key});
@@ -12,71 +15,103 @@ class RegisterView extends ConsumerStatefulWidget {
 }
 
 class _RegisterViewState extends ConsumerState<RegisterView> {
-  final _shopName = TextEditingController();
-  final _username = TextEditingController();
-  final _password = TextEditingController();
+  final _shopNameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  final _auth = AuthController();
-  bool loading = false;
+  @override
+  void dispose() {
+    _shopNameController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-  void handleRegister() async {
-    setState(() => loading = true);
+  Future<void> _handleRegister() async {
+    final shopName = _shopNameController.text.trim();
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
 
-    try {
-      await _auth.register(
-        _shopName.text.trim(),
-        _username.text.trim(),
-        _password.text.trim(),
-      );
-
-      ref.read(toastProvider.notifier).showSuccess("Account Created");
-      if (mounted) {
-        Navigator.pop(context); // back to login
-      }
-    } catch (e) {
-      ref.read(toastProvider.notifier).showError("Registration Failed");
+    if (shopName.isEmpty || username.isEmpty || password.isEmpty) {
+      ref
+          .read(toastProvider.notifier)
+          .showInfo(AppStrings.validationError); // Generic validation msg
+      return;
     }
 
-    setState(() => loading = false);
+    FocusScope.of(context).unfocus();
+
+    final result = await ref
+        .read(authControllerProvider.notifier)
+        .register(shopName, username, password);
+
+    if (result == null) {
+      // Success
+      ref
+          .read(toastProvider.notifier)
+          .showSuccess(AppStrings.toastRegisterSuccess);
+      if (mounted) {
+        context.go(AppRoutes.login); // Navigate to login as requested
+      }
+    } else if (result == 'username_exists') {
+      ref
+          .read(toastProvider.notifier)
+          .showError(AppStrings.toastUsernameExists);
+    } else {
+      ref.read(toastProvider.notifier).showError(result);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(authControllerProvider);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Register Shop")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _shopName,
-              decoration: const InputDecoration(labelText: "Shop Name"),
-            ),
+      appBar: AppBar(title: const Text(AppStrings.registerTitle)),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+              // Form
+              TextFormField(
+                controller: _shopNameController,
+                decoration: const InputDecoration(
+                  hintText: AppStrings.shopNameHint,
+                  prefixIcon: Icon(Icons.store_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  hintText: AppStrings.usernameHint,
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: AppStrings.passwordHint,
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+              const Spacer(),
 
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _username,
-              decoration: const InputDecoration(labelText: "Username"),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: _password,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Password"),
-            ),
-
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: loading ? null : handleRegister,
-              child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Create Account"),
-            ),
-          ],
+              // Create Account Button
+              GradientButton(
+                label: AppStrings.registerButton,
+                isLoading: isLoading,
+                onPressed: () {
+                  _handleRegister();
+                },
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

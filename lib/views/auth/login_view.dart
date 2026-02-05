@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shopkeeper_app/views/auth/register_view.dart';
-
+import 'package:go_router/go_router.dart';
 import '../../controllers/auth_controller.dart';
 import '../../providers/toast_provider.dart';
+import '../../core/constants/app_strings.dart';
+import '../../core/router/app_routes.dart';
+import '../../core/ui/gradient_button.dart';
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -13,69 +15,119 @@ class LoginView extends ConsumerStatefulWidget {
 }
 
 class _LoginViewState extends ConsumerState<LoginView> {
-  final _username = TextEditingController();
-  final _password = TextEditingController();
-  final _auth = AuthController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  bool loading = false;
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-  void handleLogin() async {
-    setState(() => loading = true);
+  Future<void> _handleLogin() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
 
-    try {
-      await _auth.login(_username.text.trim(), _password.text.trim());
-
-      ref.read(toastProvider.notifier).showSuccess("Login Successful");
-
-      // TODO → Navigate to Customer List
-    } catch (e) {
-      ref
-          .read(toastProvider.notifier)
-          .showError("Invalid Username or Password");
+    if (username.isEmpty || password.isEmpty) {
+      ref.read(toastProvider.notifier).showInfo(AppStrings.validationError);
+      return;
     }
 
-    setState(() => loading = false);
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+
+    final result = await ref
+        .read(authControllerProvider.notifier)
+        .login(username, password);
+
+    if (result == 'success') {
+      ref
+          .read(toastProvider.notifier)
+          .showSuccess(AppStrings.toastLoginSuccess);
+      if (mounted) {
+        context.go(AppRoutes.customers);
+      } else if (result == 'wrong_password') {
+        ref
+            .read(toastProvider.notifier)
+            .showError(AppStrings.toastWrongPassword);
+      } else if (result == 'user_not_found') {
+        ref
+            .read(toastProvider.notifier)
+            .showError(AppStrings.toastUserNotFound);
+      }
+    } else {
+      ref.read(toastProvider.notifier).showError(result ?? 'Login Failed');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(authControllerProvider, (previous, next) {
+      // Could handle side effects here if preferred, but doing it in _handleLogin is simpler for now
+    });
+
+    final isLoading = ref.watch(authControllerProvider);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Shopkeeper Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _username,
-              decoration: const InputDecoration(labelText: "Username"),
-            ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Spacer(),
+              // Logo
+              // Image.asset(
+              //   'assets/logo.png',
+              //   height: 100,
+              //   errorBuilder: (context, error, stackTrace) =>
+              //       const Icon(Icons.store, size: 80, color: Colors.grey),
+              // ),
+              const SizedBox(height: 48),
 
-            const SizedBox(height: 16),
+              // Form
+              TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  hintText: AppStrings.usernameHint,
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: AppStrings.passwordHint,
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+              const SizedBox(height: 32),
 
-            TextField(
-              controller: _password,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Password"),
-            ),
+              // Login Button
+              GradientButton(
+                label: AppStrings.loginButton,
+                isLoading: isLoading,
+                onPressed: () {
+                  _handleLogin();
+                },
+              ),
+              const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: loading ? null : handleLogin,
-              child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Login"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RegisterView()),
-                );
-              },
-              child: const Text("New User? Register"),
-            ),
-          ],
+              // Register Link
+              TextButton(
+                onPressed: () {
+                  context.push(AppRoutes.register);
+                },
+                child: const Text(
+                  AppStrings.registerLink,
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
         ),
       ),
     );
