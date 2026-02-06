@@ -172,7 +172,7 @@ class CustomerListView extends ConsumerWidget {
       baseUrl = Uri.base.origin;
     } else {
       // For mobile, default web URL
-      baseUrl = "http://localhost:8080";
+      baseUrl = AppStrings.baseUrl;
     }
 
     final link = "$baseUrl/#${AppRoutes.customerWebPath(customer.token!)}";

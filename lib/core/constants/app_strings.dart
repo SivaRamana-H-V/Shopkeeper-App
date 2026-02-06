@@ -104,4 +104,7 @@ class AppStrings {
   static const String linkCopied = "Link copied";
   static const String whatsappNotAvailable = "WhatsApp not installed";
   static const String shareFailed = "Share failed";
+
+  // Localhost
+  static const String baseUrl = "https://nanjil.netlify.app";
 }
