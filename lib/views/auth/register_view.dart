@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../controllers/auth_controller.dart';
-import '../../providers/toast_provider.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/router/app_routes.dart';
-import '../../core/ui/gradient_button.dart';
+import 'package:shopkeeper_app/controllers/auth_controller.dart';
+import 'package:shopkeeper_app/providers/toast_provider.dart';
+import 'package:shopkeeper_app/core/constants/app_strings.dart';
+import 'package:shopkeeper_app/core/router/app_routes.dart';
+import 'package:shopkeeper_app/core/ui/gradient_button.dart';
+import 'package:shopkeeper_app/core/ui/custom_text_field.dart';
 
 class RegisterView extends ConsumerStatefulWidget {
   const RegisterView({super.key});
@@ -75,29 +76,23 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
             children: [
               const SizedBox(height: 24),
               // Form
-              TextFormField(
+              CustomTextField(
                 controller: _shopNameController,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.shopNameHint,
-                  prefixIcon: Icon(Icons.store_outlined),
-                ),
+                hintText: AppStrings.shopNameHint,
+                prefixIcon: Icons.store_outlined,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CustomTextField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.usernameHint,
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
+                hintText: AppStrings.usernameHint,
+                prefixIcon: Icons.person_outline,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CustomTextField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.passwordHint,
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
+                hintText: AppStrings.passwordHint,
+                prefixIcon: Icons.lock_outline,
+                isPassword: true,
               ),
               const Spacer(),
 

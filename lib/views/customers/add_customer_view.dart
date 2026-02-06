@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../controllers/customer_controller.dart';
-import '../../providers/toast_provider.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/ui/gradient_button.dart';
+import 'package:shopkeeper_app/controllers/customer_controller.dart';
+import 'package:shopkeeper_app/providers/toast_provider.dart';
+import 'package:shopkeeper_app/core/constants/app_strings.dart';
+import 'package:shopkeeper_app/core/ui/gradient_button.dart';
+import 'package:shopkeeper_app/core/ui/custom_text_field.dart';
 
 class AddCustomerView extends ConsumerStatefulWidget {
   const AddCustomerView({super.key});
@@ -74,21 +75,17 @@ class _AddCustomerViewState extends ConsumerState<AddCustomerView> {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              TextFormField(
+              CustomTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.customerName,
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
+                hintText: AppStrings.customerName,
+                prefixIcon: Icons.person_outline,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CustomTextField(
                 controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.phoneNumber,
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
+                hintText: AppStrings.phoneNumber,
+                prefixIcon: Icons.phone_outlined,
+                isPhone: true,
               ),
               const Spacer(),
               GradientButton(

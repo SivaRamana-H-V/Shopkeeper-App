@@ -1,34 +1,37 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'entry_model.g.dart';
+
+enum EntryStatus {
+  @JsonValue('pending')
+  pending,
+  @JsonValue('approved')
+  approved,
+  @JsonValue('disputed')
+  disputed,
+}
+
+@JsonSerializable()
 class Entry {
   final String id;
-  final String customerId;
+  @JsonKey(name: 'customer_id')
+  final String customerId; // UUID
+  @JsonKey(name: 'customer_code')
+  final String? customerCode; // CUST-...
   final double amount;
-  final String status; // Pending, Approved, Disputed
+  final EntryStatus status;
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
   Entry({
     required this.id,
     required this.customerId,
+    this.customerCode,
     required this.amount,
     required this.status,
     required this.createdAt,
   });
 
-  factory Entry.fromJson(Map<String, dynamic> json) {
-    return Entry(
-      id: json['id'] as String,
-      customerId: json['customer_id'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      status: json['status'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'customer_id': customerId,
-      'amount': amount,
-      'status': status,
-      // created_at is usually handled by DB default
-    };
-  }
+  factory Entry.fromJson(Map<String, dynamic> json) => _$EntryFromJson(json);
+  Map<String, dynamic> toJson() => _$EntryToJson(this);
 }

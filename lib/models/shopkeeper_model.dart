@@ -1,6 +1,12 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'shopkeeper_model.g.dart';
+
+@JsonSerializable()
 class Shopkeeper {
   final String id;
   final String username;
+  @JsonKey(name: 'shop_name')
   final String shopName;
 
   Shopkeeper({
@@ -9,11 +15,7 @@ class Shopkeeper {
     required this.shopName,
   });
 
-  factory Shopkeeper.fromJson(Map<String, dynamic> json) {
-    return Shopkeeper(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      shopName: json['shop_name'] as String,
-    );
-  }
+  factory Shopkeeper.fromJson(Map<String, dynamic> json) =>
+      _$ShopkeeperFromJson(json);
+  Map<String, dynamic> toJson() => _$ShopkeeperToJson(this);
 }
