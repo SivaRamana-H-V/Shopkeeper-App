@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shopkeeper_app/core/constants/app_strings.dart';
-import 'services/supabase_service.dart';
-import 'app.dart';
-import 'core/auth_session.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async {
+import 'app_router.dart';
+import 'core/config/env_config.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SupabaseService.initialize();
 
-  // Hive Init
-  await Hive.initFlutter();
-  final sessionBox = await Hive.openBox(AppStrings.sessionBox);
+  // Load environment variables from .env file.
+  await dotenv.load(fileName: '.env');
 
-  // Restore Session
-  AuthSession.shopkeeperId = sessionBox.get(AppStrings.shopkeeperId) as String?;
-  AuthSession.shopName = sessionBox.get(AppStrings.shopName) as String?;
+  // Initialize Supabase with environment variables.
+  await Supabase.initialize(
+    url: EnvConfig.supabaseUrl,
+    anonKey: EnvConfig.supabaseAnonKey,
+  );
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const ProviderScope(child: ShopkeeperApp()));
+}
+
+/// Root application widget.
+class ShopkeeperApp extends ConsumerWidget {
+  const ShopkeeperApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
+      title: 'Change',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorSchemeSeed: Colors.deepPurple,
+        useMaterial3: true,
+        brightness: Brightness.light,
+      ),
+      routerConfig: router,
+    );
+  }
 }
