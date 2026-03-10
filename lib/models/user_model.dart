@@ -72,7 +72,7 @@ class UserModel {
         if (phone != null) 'phone': phone,
         if (photoUrl != null) 'photoUrl': photoUrl,
         'role': role.name,
-        'createdAt': Timestamp.fromDate(createdAt),
+        'createdAt': FieldValue.serverTimestamp(),
       };
 
   // ── Convenience ───────────────────────────────────────────────────────────

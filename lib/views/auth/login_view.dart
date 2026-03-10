@@ -71,11 +71,19 @@ class LoginView extends ConsumerWidget {
   Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
-      // On success, SplashView (which usually wraps this logic or is the entry point)
-      // or a listener will trigger navigation.
-      // For immediate feedback, we can redirect here too.
-      if (context.mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.roleSelect);
+
+
+      // Check if user has a profile in Firestore
+      final user = ref.read(authControllerProvider).value;
+      if (user != null) {
+        final profile =
+            await ref.read(firestoreServiceProvider).fetchUser(user.uid);
+      if (!context.mounted) return;
+        if (profile != null) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.roleSelect);
+        }
       }
     } catch (e) {
       if (context.mounted) {

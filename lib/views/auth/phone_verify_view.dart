@@ -99,8 +99,18 @@ class _PhoneVerifyViewState extends ConsumerState<PhoneVerifyView> {
             verificationId: _verificationId!,
             smsCode: code,
           );
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.roleSelect);
+
+      // Check if user has a profile in Firestore
+      final user = ref.read(authControllerProvider).value;
+      if (user != null) {
+        final profile =
+            await ref.read(firestoreServiceProvider).fetchUser(user.uid);
+        if (!mounted) return;
+        if (profile != null) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.roleSelect);
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);

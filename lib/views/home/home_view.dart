@@ -6,6 +6,7 @@ import 'package:pulse_ledger/controllers/role_provider.dart';
 import 'package:pulse_ledger/core/router/route_generator.dart';
 import 'package:pulse_ledger/core/theme/app_theme.dart';
 import 'package:pulse_ledger/models/user_model.dart';
+import 'package:pulse_ledger/widgets/pulse_button.dart';
 
 class HomeView extends ConsumerWidget {
   const HomeView({super.key});
@@ -23,8 +24,7 @@ class HomeView extends ConsumerWidget {
         title: Text(isShopOwner ? 'My Shop' : 'My Ledger'),
         actions: [
           IconButton(
-            onPressed: () =>
-                ref.read(authControllerProvider.notifier).signOut(),
+            onPressed: () => _showLogoutDialog(context, ref),
             icon: const Icon(Icons.logout_rounded),
           ),
         ],
@@ -53,58 +53,56 @@ class HomeView extends ConsumerWidget {
           child: CircularProgressIndicator(color: AppTheme.amberGold),
         ),
         error: (err, _) {
-          final errorStr = err.toString();
-          if (errorStr.contains('FAILED_PRECONDITION') ||
-              errorStr.contains('index')) {
-            return const _IndexingState();
-          }
           return Center(child: Text('Connection Issue: $err'));
         },
       ),
       floatingActionButton: isShopOwner
           ? FloatingActionButton.extended(
+              label: const Text('Add'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               onPressed: () {
                 // Future: Show search/contact picker
               },
               backgroundColor: AppTheme.amberGold,
               foregroundColor: Colors.black,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Customer'),
             )
           : null,
     );
   }
-}
 
-class _IndexingState extends StatelessWidget {
-  const _IndexingState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.speed_rounded,
-                size: 64, color: AppTheme.amberGold),
-            const SizedBox(height: 24),
-            Text(
-              'Optimizing Pulse for you...',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out from Pulse?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          SizedBox(
+            width: 120,
+            child: PulseButton(
+              label: 'Sign Out',
+              onPressed: () {
+                Navigator.pop(context);
+                ref.read(authControllerProvider.notifier).signOut();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  AppRoutes.splash,
+                  (route) => false,
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Firestore is building its query indexes. This usually takes a minute but only happens once.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54),
-            ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(strokeWidth: 2),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
