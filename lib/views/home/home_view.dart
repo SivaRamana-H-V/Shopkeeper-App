@@ -49,14 +49,25 @@ class HomeView extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Error: $err')),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.amberGold),
+        ),
+        error: (err, _) {
+          final errorStr = err.toString();
+          if (errorStr.contains('FAILED_PRECONDITION') ||
+              errorStr.contains('index')) {
+            return const _IndexingState();
+          }
+          return Center(child: Text('Connection Issue: $err'));
+        },
       ),
       floatingActionButton: isShopOwner
           ? FloatingActionButton.extended(
               onPressed: () {
                 // Future: Show search/contact picker
               },
+              backgroundColor: AppTheme.amberGold,
+              foregroundColor: Colors.black,
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add Customer'),
             )
@@ -65,43 +76,35 @@ class HomeView extends ConsumerWidget {
   }
 }
 
-class _ChatCard extends StatelessWidget {
-  const _ChatCard({required this.chat});
-
-  final Map<String, dynamic> chat;
+class _IndexingState extends StatelessWidget {
+  const _IndexingState();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.bubbleReceived,
-          child: const Icon(Icons.person_rounded, color: Colors.white70),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.speed_rounded,
+                size: 64, color: AppTheme.amberGold),
+            const SizedBox(height: 24),
+            Text(
+              'Optimizing Pulse for you...',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Firestore is building its query indexes. This usually takes a minute but only happens once.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54),
+            ),
+            const SizedBox(height: 32),
+            const CircularProgressIndicator(strokeWidth: 2),
+          ],
         ),
-        title: Text(
-          chat['counterpartyName'] ?? 'Business Chat',
-          style: theme.textTheme.titleMedium,
-        ),
-        subtitle: Text(
-          chat['lastMessage'] ?? 'Start a conversation',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall,
-        ),
-        trailing:
-            const Icon(Icons.chevron_right_rounded, color: Colors.white24),
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.chat,
-            arguments: {
-              'chatId': chat['id'],
-              'participantName': chat['counterpartyName'] ?? 'Business Chat',
-            },
-          );
-        },
       ),
     );
   }
@@ -114,30 +117,62 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.chat_bubble_outline_rounded,
-              size: 64, color: Colors.white24),
-          const SizedBox(height: 16),
-          Text(
-            isShopOwner ? 'No customers yet' : 'No transactions yet',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(color: Colors.white38),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isShopOwner
-                ? 'Tap the button to add your first customer.'
-                : 'Your shop owner will add you here.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.white24),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.amberGold.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 64,
+                color: AppTheme.amberGold,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'No active ledgers yet',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isShopOwner
+                  ? 'Start by adding your first customer to track their balances.'
+                  : 'Your shop owner hasn\'t added your ledger yet.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white54, fontSize: 16),
+            ),
+            if (isShopOwner) ...[
+              const SizedBox(height: 48),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Future: Add customer logic
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.amberGold,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.person_add_rounded),
+                label: const Text(
+                  'Add Customer',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -165,6 +200,48 @@ class _MasterDetailLayout extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ChatCard extends StatelessWidget {
+  const _ChatCard({required this.chat});
+
+  final Map<String, dynamic> chat;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: const CircleAvatar(
+          backgroundColor: AppTheme.bubbleReceived,
+          child: Icon(Icons.person_rounded, color: Colors.white70),
+        ),
+        title: Text(
+          chat['counterpartyName'] ?? 'Business Chat',
+          style: theme.textTheme.titleMedium,
+        ),
+        subtitle: Text(
+          chat['lastMessage'] ?? 'Start a conversation',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall,
+        ),
+        trailing:
+            const Icon(Icons.chevron_right_rounded, color: Colors.white24),
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.chat,
+            arguments: {
+              'chatId': chat['id'],
+              'participantName': chat['counterpartyName'] ?? 'Business Chat',
+            },
+          );
+        },
+      ),
     );
   }
 }

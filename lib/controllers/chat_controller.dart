@@ -5,19 +5,19 @@ import 'package:pulse_ledger/models/message_model.dart';
 /// Streams the message list for a given [chatId].
 final chatControllerProvider =
     StreamProvider.family<List<MessageModel>, String>((ref, chatId) {
-      return ref.read(firestoreServiceProvider).streamMessages(chatId);
-    });
+  return ref.read(firestoreServiceProvider).streamMessages(chatId);
+});
 
 /// Streams all chats for the currently signed-in user.
 final chatListProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
   final authState = ref.watch(authStateProvider);
-  return authState.when(
+
+  return authState.maybeWhen(
     data: (user) {
-      if (user == null) return Stream.value([]);
+      if (user == null) return const Stream.empty();
       return ref.read(firestoreServiceProvider).streamUserChats(user.uid);
     },
-    loading: () => Stream.value([]),
-    error: (_, __) => Stream.value([]),
+    orElse: () => const Stream.empty(),
   );
 });
 
@@ -30,9 +30,8 @@ class ChatSendNotifier extends Notifier<void> {
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
 
-    final userModel = await ref
-        .read(firestoreServiceProvider)
-        .fetchUser(user.uid);
+    final userModel =
+        await ref.read(firestoreServiceProvider).fetchUser(user.uid);
 
     final message = MessageModel(
       id: '',

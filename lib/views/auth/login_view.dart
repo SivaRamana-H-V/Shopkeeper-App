@@ -75,7 +75,7 @@ class LoginView extends ConsumerWidget {
       // or a listener will trigger navigation.
       // For immediate feedback, we can redirect here too.
       if (context.mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.splash);
+        Navigator.pushReplacementNamed(context, AppRoutes.roleSelect);
       }
     } catch (e) {
       if (context.mounted) {

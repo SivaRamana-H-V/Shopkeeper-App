@@ -100,7 +100,7 @@ class _PhoneVerifyViewState extends ConsumerState<PhoneVerifyView> {
             smsCode: code,
           );
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.splash);
+        Navigator.pushReplacementNamed(context, AppRoutes.roleSelect);
       }
     } catch (e) {
       setState(() => _isLoading = false);

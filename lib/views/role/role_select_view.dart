@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pulse_ledger/controllers/auth_controller.dart';
+import 'package:pulse_ledger/controllers/role_provider.dart';
 import 'package:pulse_ledger/core/router/route_generator.dart';
 import 'package:pulse_ledger/core/theme/app_theme.dart';
 import 'package:pulse_ledger/models/user_model.dart';
@@ -23,15 +24,22 @@ class _RoleSelectViewState extends ConsumerState<RoleSelectView> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(firestoreServiceProvider).updateUserRole(user.uid, role);
+      // Create initial profile model
+      final userModel = UserModel.fromAuth(user, role);
+
+      // Upsert into Firestore
+      await ref.read(firestoreServiceProvider).createUserProfile(userModel);
+
       if (mounted) {
+        // Clear splash/auth hang by refreshing the provider or navigating
+        ref.invalidate(currentUserProvider);
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update role: $e')),
+          SnackBar(content: Text('Failed to set role: $e')),
         );
       }
     }
