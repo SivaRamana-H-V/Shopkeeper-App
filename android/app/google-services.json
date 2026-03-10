@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "424859103381",
+    "project_id": "ar-object-a8290",
+    "storage_bucket": "ar-object-a8290.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:424859103381:android:f3cc31e04984661aad6b9c",
+        "android_client_info": {
+          "package_name": "com.pulse.ledger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADRQwiCzj0BpZpYRc7a_8mP5nYswO7dC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
