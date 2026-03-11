@@ -5,12 +5,6 @@ import 'package:pulse_ledger/core/theme/app_theme.dart';
 enum PulseButtonVariant { primary, secondary, ghost }
 
 /// Pulse's branded CTA button.
-///
-/// Usage:
-/// ```dart
-/// PulseButton(label: 'Continue', onPressed: _handleTap);
-/// PulseButton.icon(label: 'Google', icon: Icons.g_mobiledata, onPressed: _googleSignIn);
-/// ```
 class PulseButton extends StatelessWidget {
   const PulseButton({
     super.key,
@@ -20,6 +14,7 @@ class PulseButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.width = double.infinity,
+    this.backgroundColor,
   });
 
   /// Creates a button with a leading [icon].
@@ -31,6 +26,7 @@ class PulseButton extends StatelessWidget {
     this.variant = PulseButtonVariant.secondary,
     this.isLoading = false,
     this.width = double.infinity,
+    this.backgroundColor,
   });
 
   final String label;
@@ -39,6 +35,7 @@ class PulseButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final double width;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +46,7 @@ class PulseButton extends StatelessWidget {
             width: 22,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              color: Colors.white,
+              color: AppTheme.amberGold,
             ),
           )
         : _buildLabel(theme);
@@ -60,6 +57,12 @@ class PulseButton extends StatelessWidget {
       child: switch (variant) {
         PulseButtonVariant.primary => ElevatedButton(
             onPressed: isLoading ? null : onPressed,
+            style: backgroundColor != null
+                ? ElevatedButton.styleFrom(
+                    backgroundColor: backgroundColor,
+                    foregroundColor: Colors.white,
+                  )
+                : null,
             child: child,
           ),
         PulseButtonVariant.secondary => OutlinedButton(

@@ -4,13 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum MessageType {
   text,
   image,
-  ledgerEntry; // future: structured transaction messages
+  ledgerEntry,
+  creditRequest; // specialized financial request
 
   static MessageType fromString(String? value) => switch (value) {
-    'image' => MessageType.image,
-    'ledgerEntry' => MessageType.ledgerEntry,
-    _ => MessageType.text,
-  };
+        'image' => MessageType.image,
+        'ledgerEntry' => MessageType.ledgerEntry,
+        'creditRequest' => MessageType.creditRequest,
+        _ => MessageType.text,
+      };
 }
 
 /// A single message in a Pulse chat thread.
@@ -25,6 +27,7 @@ class MessageModel {
     this.type = MessageType.text,
     this.imageUrl,
     this.isRead = false,
+    this.metadata = const {},
   });
 
   final String id;
@@ -35,6 +38,17 @@ class MessageModel {
   final MessageType type;
   final String? imageUrl;
   final bool isRead;
+  final Map<String, dynamic> metadata;
+
+  // Metadata keys for credit_request
+  static const String amountKey = 'amount';
+  static const String descriptionKey = 'description';
+  static const String statusKey = 'status';
+
+  // Status values
+  static const String statusPending = 'pending';
+  static const String statusApproved = 'approved';
+  static const String statusRejected = 'rejected';
 
   // ── Firestore serialisation ────────────────────────────────────────────────
 
@@ -51,31 +65,35 @@ class MessageModel {
       type: MessageType.fromString(data['type'] as String?),
       imageUrl: data['imageUrl'] as String?,
       isRead: data['isRead'] as bool? ?? false,
+      metadata: data['metadata'] as Map<String, dynamic>? ?? const {},
     );
   }
 
   Map<String, dynamic> toFirestore() => {
-    'senderId': senderId,
-    'senderName': senderName,
-    'text': text,
-    'timestamp': FieldValue.serverTimestamp(),
-    'type': type.name,
-    if (imageUrl != null) 'imageUrl': imageUrl,
-    'isRead': isRead,
-  };
+        'senderId': senderId,
+        'senderName': senderName,
+        'text': text,
+        'timestamp': FieldValue.serverTimestamp(),
+        'type': type.name,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+        'isRead': isRead,
+        'metadata': metadata,
+      };
 
   // ── Convenience ───────────────────────────────────────────────────────────
 
-  MessageModel copyWith({bool? isRead}) => MessageModel(
-    id: id,
-    senderId: senderId,
-    senderName: senderName,
-    text: text,
-    timestamp: timestamp,
-    type: type,
-    imageUrl: imageUrl,
-    isRead: isRead ?? this.isRead,
-  );
+  MessageModel copyWith({bool? isRead, Map<String, dynamic>? metadata}) =>
+      MessageModel(
+        id: id,
+        senderId: senderId,
+        senderName: senderName,
+        text: text,
+        timestamp: timestamp,
+        type: type,
+        imageUrl: imageUrl,
+        isRead: isRead ?? this.isRead,
+        metadata: metadata ?? this.metadata,
+      );
 
   @override
   String toString() =>

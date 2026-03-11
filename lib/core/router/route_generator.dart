@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:pulse_ledger/views/auth/login_view.dart';
-import 'package:pulse_ledger/views/auth/phone_verify_view.dart';
+import 'package:pulse_ledger/views/auth/otp_verification_view.dart';
 import 'package:pulse_ledger/views/chat/chat_view.dart';
 import 'package:pulse_ledger/views/home/home_view.dart';
+import 'package:pulse_ledger/views/profile/profile_view.dart';
 import 'package:pulse_ledger/views/role/role_select_view.dart';
+import 'package:pulse_ledger/views/home/add_customer_view.dart';
 import 'package:pulse_ledger/views/splash/splash_view.dart';
 
 /// All named route constants for Pulse.
@@ -12,10 +14,12 @@ class AppRoutes {
 
   static const splash = '/';
   static const login = '/login';
-  static const phoneVerify = '/phone-verify';
+  static const otpVerify = '/otp-verify';
   static const roleSelect = '/role-select';
   static const home = '/home';
   static const chat = '/chat';
+  static const addCustomer = '/add-customer';
+  static const profile = '/profile';
 }
 
 /// Centralised route factory. The [MaterialApp] uses this exclusively via
@@ -33,10 +37,13 @@ class RouteGenerator {
       case AppRoutes.login:
         return _slideRoute(const LoginView(), settings);
 
-      case AppRoutes.phoneVerify:
-        final args = settings.arguments as Map<String, dynamic>?;
+      case AppRoutes.otpVerify:
+        final args = settings.arguments as Map<String, dynamic>;
         return _slideRoute(
-          PhoneVerifyView(prefilledPhone: args?['phone'] as String?),
+          OtpVerificationView(
+            verificationId: args['verificationId'] as String,
+            phoneNumber: args['phoneNumber'] as String,
+          ),
           settings,
         );
 
@@ -57,6 +64,12 @@ class RouteGenerator {
           ),
           settings,
         );
+
+      case AppRoutes.addCustomer:
+        return _slideRoute(const AddCustomerView(), settings);
+
+      case AppRoutes.profile:
+        return _slideRoute(const ProfileView(), settings);
 
       // ── 404 ───────────────────────────────────────────────────────────────
       default:
@@ -89,8 +102,8 @@ class RouteGenerator {
       transitionsBuilder: (_, animation, __, child) => SlideTransition(
         position: Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero)
             .animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-            ),
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+        ),
         child: child,
       ),
       transitionDuration: const Duration(milliseconds: 350),

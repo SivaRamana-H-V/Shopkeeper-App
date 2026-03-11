@@ -27,6 +27,10 @@ class UserModel {
     this.phone,
     this.photoUrl,
     required this.role,
+    this.shopName,
+    this.businessName,
+    this.upiId,
+    this.totalOutstanding = 0.0,
     required this.createdAt,
   });
 
@@ -36,6 +40,10 @@ class UserModel {
   final String? phone;
   final String? photoUrl;
   final UserRole role;
+  final String? shopName;
+  final String? businessName;
+  final String? upiId;
+  final double totalOutstanding;
   final DateTime createdAt;
 
   // ── Firestore serialisation ────────────────────────────────────────────────
@@ -49,11 +57,15 @@ class UserModel {
       phone: data['phone'] as String?,
       photoUrl: data['photoUrl'] as String?,
       role: UserRole.fromString(data['role'] as String?),
+      shopName: data['shopName'] as String?,
+      businessName: data['businessName'] as String?,
+      upiId: data['upiId'] as String?,
+      totalOutstanding: (data['totalOutstanding'] as num?)?.toDouble() ?? 0.0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  factory UserModel.fromAuth(User user, UserRole role) {
+  factory UserModel.fromAuth(User user, UserRole role, {String? shopName}) {
     return UserModel(
       uid: user.uid,
       displayName: user.displayName ?? '',
@@ -61,6 +73,9 @@ class UserModel {
       phone: user.phoneNumber,
       photoUrl: user.photoURL,
       role: role,
+      shopName: shopName,
+      businessName: shopName, // Default business name to shop name if provided
+      totalOutstanding: 0.0,
       createdAt: DateTime.now(),
     );
   }
@@ -72,6 +87,10 @@ class UserModel {
         if (phone != null) 'phone': phone,
         if (photoUrl != null) 'photoUrl': photoUrl,
         'role': role.name,
+        if (shopName != null) 'shopName': shopName,
+        if (businessName != null) 'businessName': businessName,
+        if (upiId != null) 'upiId': upiId,
+        'totalOutstanding': totalOutstanding,
         'createdAt': FieldValue.serverTimestamp(),
       };
 
@@ -82,6 +101,10 @@ class UserModel {
     String? phone,
     String? photoUrl,
     UserRole? role,
+    String? shopName,
+    String? businessName,
+    String? upiId,
+    double? totalOutstanding,
   }) =>
       UserModel(
         uid: uid,
@@ -90,6 +113,10 @@ class UserModel {
         phone: phone ?? this.phone,
         photoUrl: photoUrl ?? this.photoUrl,
         role: role ?? this.role,
+        shopName: shopName ?? this.shopName,
+        businessName: businessName ?? this.businessName,
+        upiId: upiId ?? this.upiId,
+        totalOutstanding: totalOutstanding ?? this.totalOutstanding,
         createdAt: createdAt,
       );
 

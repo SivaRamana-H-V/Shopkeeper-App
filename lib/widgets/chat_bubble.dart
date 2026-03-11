@@ -92,8 +92,16 @@ class ChatBubble extends StatelessWidget {
   }
 
   String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
+    var hour = dt.hour;
+    final isPm = hour >= 12;
+    final amPm = isPm ? 'PM' : 'AM';
+
+    // Convert to 12h
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+
+    final h = hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return '$h:$m $amPm';
   }
 }

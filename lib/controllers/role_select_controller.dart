@@ -51,6 +51,7 @@ class RoleSelectController extends Notifier<RoleSelectState> {
   Future<bool> completeProfile({
     required String name,
     required String email,
+    String? shopName,
   }) async {
     if (name.length < 3) {
       state =
@@ -62,6 +63,12 @@ class RoleSelectController extends Notifier<RoleSelectState> {
     if (!emailRegex.hasMatch(email)) {
       state =
           state.copyWith(errorMessage: 'Please enter a valid email address');
+      return false;
+    }
+
+    if (state.selectedRole == UserRole.shopOwner &&
+        (shopName == null || shopName.trim().isEmpty)) {
+      state = state.copyWith(errorMessage: 'Shop name is required');
       return false;
     }
 
@@ -83,8 +90,8 @@ class RoleSelectController extends Notifier<RoleSelectState> {
         phone: authUser.phoneNumber,
         photoUrl: authUser.photoURL,
         role: state.selectedRole!,
-        createdAt: DateTime
-            .now(), // Will be overwritten by FieldValue.serverTimestamp() in toFirestore
+        shopName: shopName,
+        createdAt: DateTime.now(),
       );
 
       await ref.read(firestoreServiceProvider).createUserProfile(userModel);

@@ -14,9 +14,14 @@ class SplashView extends ConsumerStatefulWidget {
 }
 
 class _SplashViewState extends ConsumerState<SplashView> {
+  Future<void>? _minDelay;
+
   @override
   void initState() {
     super.initState();
+    // Start minimum delay
+    _minDelay = Future.delayed(const Duration(seconds: 2));
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleStateCheck(ref.read(currentUserProvider));
     });
@@ -26,12 +31,10 @@ class _SplashViewState extends ConsumerState<SplashView> {
     profileState.when(
       data: (userModel) {
         if (userModel != null) {
-          debugPrint('💡 User profile found. Navigating to Home.');
           _navigateTo(AppRoutes.home);
         } else {
           // No profile yet, check if they are even signed in
           final authUser = ref.read(authStateProvider).value;
-          debugPrint('💡 No profile found. Auth user: ${authUser?.uid}');
 
           if (authUser == null) {
             _navigateTo(AppRoutes.login);
@@ -41,13 +44,13 @@ class _SplashViewState extends ConsumerState<SplashView> {
           }
         }
       },
-      loading: () => debugPrint('⏳ Splash: Loading user state...'),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppTheme.amberGold),
+      ),
       error: (err, stack) {
         debugPrint('❌ Splash Error: $err');
         debugPrint(stack.toString());
 
-        // If we have an auth user but Firestore fails (likely permissions),
-        // try to go to RoleSelect as a fallback to see if we can create the profile.
         final authUser = ref.read(authStateProvider).value;
         if (authUser != null) {
           _navigateTo(AppRoutes.roleSelect);
@@ -58,7 +61,10 @@ class _SplashViewState extends ConsumerState<SplashView> {
     );
   }
 
-  void _navigateTo(String route) {
+  Future<void> _navigateTo(String route) async {
+    if (!mounted) return;
+    // Wait for minimum display time
+    await _minDelay;
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, route);
   }
@@ -74,6 +80,7 @@ class _SplashViewState extends ConsumerState<SplashView> {
     return Scaffold(
       body: Container(
         width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -81,21 +88,28 @@ class _SplashViewState extends ConsumerState<SplashView> {
             colors: [AppTheme.royalPurple, Color(0xFF3700B3)],
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
             // Splash Logo
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: AssetImage(
-                "assets/splash_logo.png",
+            Center(
+              child: CircleAvatar(
+                radius: 60,
+                backgroundImage: AssetImage(
+                  "assets/splash_logo.png",
+                ),
               ),
             ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.amberGold),
-            ),
+            const Align(
+                alignment: Alignment.center,
+                child: SizedBox(
+                  height: 120,
+                  width: 120,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 10,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppTheme.amberGold),
+                  ),
+                )),
           ],
         ),
       ),

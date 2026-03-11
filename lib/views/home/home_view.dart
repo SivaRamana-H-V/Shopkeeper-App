@@ -6,7 +6,7 @@ import 'package:pulse_ledger/controllers/role_provider.dart';
 import 'package:pulse_ledger/core/router/route_generator.dart';
 import 'package:pulse_ledger/core/theme/app_theme.dart';
 import 'package:pulse_ledger/models/user_model.dart';
-import 'package:pulse_ledger/widgets/pulse_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeView extends ConsumerWidget {
   const HomeView({super.key});
@@ -24,8 +24,9 @@ class HomeView extends ConsumerWidget {
         title: Text(isShopOwner ? 'My Shop' : 'My Ledger'),
         actions: [
           IconButton(
-            onPressed: () => _showLogoutDialog(context, ref),
-            icon: const Icon(Icons.logout_rounded),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+            icon: const Icon(Icons.account_circle_rounded),
+            tooltip: 'Profile',
           ),
         ],
       ),
@@ -63,47 +64,13 @@ class HomeView extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               onPressed: () {
-                // Future: Show search/contact picker
+                Navigator.pushNamed(context, AppRoutes.addCustomer);
               },
               backgroundColor: AppTheme.amberGold,
               foregroundColor: Colors.black,
               icon: const Icon(Icons.add_rounded),
             )
           : null,
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out from Pulse?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          SizedBox(
-            width: 120,
-            child: PulseButton(
-              label: 'Sign Out',
-              onPressed: () {
-                Navigator.pop(context);
-                ref.read(authControllerProvider.notifier).signOut();
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AppRoutes.splash,
-                  (route) => false,
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -149,7 +116,7 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: 48),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Future: Add customer logic
+                  Navigator.pushNamed(context, AppRoutes.addCustomer);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.amberGold,
@@ -202,14 +169,22 @@ class _MasterDetailLayout extends StatelessWidget {
   }
 }
 
-class _ChatCard extends StatelessWidget {
+class _ChatCard extends ConsumerWidget {
   const _ChatCard({required this.chat});
 
   final Map<String, dynamic> chat;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final currentUser = ref.watch(authStateProvider).value;
+
+    // Resolve Identity
+    final isShopOwner = chat['shopId'] == currentUser?.uid;
+    final displayName = isShopOwner
+        ? (chat['customerName'] ?? 'Customer')
+        : (chat['shopName'] ?? 'Shop Owner');
+
     return Card(
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -218,28 +193,74 @@ class _ChatCard extends StatelessWidget {
           child: Icon(Icons.person_rounded, color: Colors.white70),
         ),
         title: Text(
-          chat['counterpartyName'] ?? 'Business Chat',
+          displayName,
           style: theme.textTheme.titleMedium,
         ),
         subtitle: Text(
-          chat['lastMessage'] ?? 'Start a conversation',
+          (chat['lastMessage'] != null &&
+                  chat['lastMessage'].toString().isNotEmpty)
+              ? chat['lastMessage']
+              : 'Start a conversation',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall,
         ),
-        trailing:
-            const Icon(Icons.chevron_right_rounded, color: Colors.white24),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (chat['totalBalance'] != null && chat['totalBalance'] != 0)
+              Text(
+                '₹${chat['totalBalance']}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: (chat['totalBalance'] as num) > 0
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            if (chat['lastMessageAt'] != null)
+              Text(
+                _formatTimestamp(chat['lastMessageAt']),
+                style:
+                    theme.textTheme.bodySmall?.copyWith(color: Colors.white24),
+              ),
+          ],
+        ),
         onTap: () {
           Navigator.pushNamed(
             context,
             AppRoutes.chat,
             arguments: {
               'chatId': chat['id'],
-              'participantName': chat['counterpartyName'] ?? 'Business Chat',
+              'participantName': displayName,
             },
           );
         },
       ),
     );
+  }
+
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp == null) return '';
+    DateTime dt;
+    if (timestamp is DateTime) {
+      dt = timestamp;
+    } else if (timestamp is Timestamp) {
+      dt = timestamp.toDate();
+    } else {
+      return '';
+    }
+    var hour = dt.hour;
+    final isPm = hour >= 12;
+    final amPm = isPm ? 'pm' : 'am';
+
+    // Convert to 12h
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+
+    final h = hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m $amPm';
   }
 }

@@ -16,11 +16,13 @@ class RoleSelectView extends ConsumerStatefulWidget {
 class _RoleSelectViewState extends ConsumerState<RoleSelectView> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _shopNameController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _shopNameController.dispose();
     super.dispose();
   }
 
@@ -55,6 +57,8 @@ class _RoleSelectViewState extends ConsumerState<RoleSelectView> {
                     key: const ValueKey('profile_form'),
                     nameController: _nameController,
                     emailController: _emailController,
+                    shopNameController: _shopNameController,
+                    isShopOwner: state.selectedRole == UserRole.shopOwner,
                     errorMessage: state.errorMessage,
                     onBack: () => ref
                         .read(roleSelectControllerProvider.notifier)
@@ -65,8 +69,11 @@ class _RoleSelectViewState extends ConsumerState<RoleSelectView> {
                           .completeProfile(
                             name: _nameController.text,
                             email: _emailController.text,
+                            shopName: state.selectedRole == UserRole.shopOwner
+                                ? _shopNameController.text
+                                : null,
                           );
-                      if (success && mounted) {
+                      if (success && context.mounted) {
                         Navigator.pushReplacementNamed(context, AppRoutes.home);
                       }
                     },
@@ -137,6 +144,8 @@ class _ProfileFormStep extends StatelessWidget {
     super.key,
     required this.nameController,
     required this.emailController,
+    required this.shopNameController,
+    required this.isShopOwner,
     required this.onBack,
     required this.onComplete,
     this.errorMessage,
@@ -144,6 +153,8 @@ class _ProfileFormStep extends StatelessWidget {
 
   final TextEditingController nameController;
   final TextEditingController emailController;
+  final TextEditingController shopNameController;
+  final bool isShopOwner;
   final VoidCallback onBack;
   final VoidCallback onComplete;
   final String? errorMessage;
@@ -229,6 +240,22 @@ class _ProfileFormStep extends StatelessWidget {
               prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
+          if (isShopOwner) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Shop Name',
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(color: AppTheme.onSurfaceMuted),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: shopNameController,
+              decoration: const InputDecoration(
+                hintText: 'Enter your shop or business name',
+                prefixIcon: Icon(Icons.store_outlined),
+              ),
+            ),
+          ],
           const SizedBox(height: 48),
           ElevatedButton(
             onPressed: onComplete,
